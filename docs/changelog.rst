@@ -49,6 +49,9 @@ Bug fixes
   typo in the generic database open failure message. :bug:`1676`
 - Stop replacing ``\`` with ``/`` in ``util.path_as_posix`` on Unix, since ``\``
   is a valid character in filenames on Unix. :bug:`7062`
+- :ref:`import-cmd`: Importing a WAV file containing an MP3 stream that already
+  has an ``.mp3`` extension no longer deletes the file. The extracted stream is
+  now written back to the same file instead. :bug:`6748`
 
 ..
     For plugin developers

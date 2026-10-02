@@ -167,10 +167,16 @@ def remux_mpeglayer3_wav(path: AnyPath) -> AnyPath | None:
     mp3_data = data[data_offset + 8 :]
 
     syspath = Path(util.syspath(path))
-    mp3_path = syspath.with_suffix(".mp3")
+    # A source that already has an .mp3 extension (in any case) is
+    # rewritten in place, so it must not be removed afterwards.
+    if syspath.suffix.lower() == ".mp3":
+        mp3_path = syspath
+    else:
+        mp3_path = syspath.with_suffix(".mp3")
     mp3_path.write_bytes(mp3_data)
 
-    util.remove(path)
+    if mp3_path != syspath:
+        util.remove(path)
 
     if isinstance(path, str):
         return str(mp3_path)

@@ -2566,6 +2566,10 @@ class TestImportId(ImportHelper):
 class TestMpeglayerWavImport(AsIsImporterMixin, ImportHelper):
     """Test remuxing of WAVE_FORMAT_MPEGLAYER3 WAV files."""
 
+    @pytest.fixture(params=["mpeglayer3.mp3", "mpeglayer3.MP3"])
+    def mp3_filename(self, request):
+        return request.param
+
     def test_remux_mpeglayer3_wav(self):
         src = _common.RSRC / "mpeglayer3.wav"
         dest = self.temp_path / "mpeglayer3.wav"
@@ -2577,6 +2581,32 @@ class TestMpeglayerWavImport(AsIsImporterMixin, ImportHelper):
         assert mp3_path.suffix == ".mp3"
         assert mp3_path.exists()
         assert not dest.exists()
+
+    def test_remux_mpeglayer3_wav_with_mp3_extension_in_place(
+        self, mp3_filename
+    ):
+        """A MPEGLAYER3 WAV with an ``.mp3`` extension is remuxed in place."""
+        src = _common.RSRC / "mpeglayer3.wav"
+        dest = self.temp_path / mp3_filename
+        shutil.copy(src, syspath(dest))
+
+        remux_mpeglayer3_wav(dest)
+
+        assert [p.name for p in self.temp_path.glob("mpeglayer3.*")] == [
+            mp3_filename
+        ]
+        assert dest.read_bytes().startswith(b"\xff\xfb")
+
+    def test_import_mpeglayer3_wav_with_mp3_extension(self, mp3_filename):
+        """Importing a MPEGLAYER3 WAV with an ``.mp3`` extension keeps it."""
+        src = _common.RSRC / "mpeglayer3.wav"
+        dest = self.import_path / mp3_filename
+        shutil.copy(src, syspath(dest))
+
+        self.run_asis_importer()
+
+        assert dest.exists()
+        assert len(self.lib.items()) == len(self.import_media) + 1
 
     def test_remux_mpeglayer3_wav_disabled(self):
         """When remux_mp3_in_wav is disabled, WAV file should not be remuxed."""
